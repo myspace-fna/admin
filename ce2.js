@@ -173,25 +173,37 @@ async function cePush(){
   var tok=ceGetTok();
   if(!tok){ceStat('err','Configurez votre GitHub Token');return;}
   var btn=document.getElementById('ce-save-btn');
-  btn.disabled=true;btn.textContent='Sauvegarde...';ceStat('inf','Envoi vers GitHub...');
+  btn.disabled=true;btn.textContent='Sauvegarde...';
+  var cleanTok=tok.replace(/[^\x20-\x7E]/g,'');
+  var apiUrl='https://api.github.com/repos/'+CE_OWNER+'/'+CE_REPO+'/contents/'+CE_FILE;
+  var apiHeaders={'Authorization':'Bearer '+cleanTok,'Content-Type':'application/json','Accept':'application/vnd.github+json'};
   try{
+    // Toujours récupérer le SHA frais avant d'écrire
+    ceStat('inf','R\u00e9cup\u00e9ration du SHA...');
+    var getRes=await fetch(apiUrl+'?ref='+CE_BRANCH+'&t='+Date.now(),{
+      headers:{'Authorization':'Bearer '+cleanTok,'Accept':'application/vnd.github+json'}
+    });
+    if(!getRes.ok) throw new Error('Lecture GitHub '+getRes.status+(getRes.status===401?' \u2014 token invalide':getRes.status===404?' \u2014 fichier introuvable':''));
+    var getJson=await getRes.json();
+    ceSha=getJson.sha; // SHA garanti frais
+
+    // PUT avec le SHA frais
+    ceStat('inf','Envoi vers GitHub...');
     var csv=ceGenCsv();
     var bytes=new TextEncoder().encode('\ufeff'+csv);
     var bin='';bytes.forEach(function(b){bin+=String.fromCharCode(b);});
-    var pl={message:'Mise \u00e0 jour reservations.csv',content:btoa(bin),branch:CE_BRANCH};
-    if(ceSha)pl.sha=ceSha;
-    var res=await fetch('https://api.github.com/repos/'+CE_OWNER+'/'+CE_REPO+'/contents/'+CE_FILE,{
-      method:'PUT',
-      headers:{'Authorization':'Bearer '+tok.replace(/[^\x20-\x7E]/g,''),'Content-Type':'application/json','Accept':'application/vnd.github+json'},
-      body:JSON.stringify(pl),
-    });
-    if(!res.ok){var e=await res.json();throw new Error(e.message||'GitHub API '+res.status);}
-    var result=await res.json();ceSha=result.content.sha;
+    var pl={message:'Mise \u00e0 jour reservations.csv \u2014 CalEdit',content:btoa(bin),branch:CE_BRANCH,sha:ceSha};
+    var res=await fetch(apiUrl,{method:'PUT',headers:apiHeaders,body:JSON.stringify(pl)});
+    if(!res.ok){var e=await res.json();throw new Error(e.message||'GitHub PUT '+res.status);}
+    var result=await res.json();
+    ceSha=result.content.sha;
     ceStat('ok','Sauvegard\u00e9 sur GitHub : '+ceD.length+' r\u00e9servations');
-    btn.textContent='Sauvegard\u00e9 !';ceTst('ok','Sauvegard\u00e9 sur GitHub');
+    btn.textContent='Sauvegard\u00e9 !';
+    ceTst('ok','Sauvegard\u00e9 sur GitHub');
     setTimeout(async function(){btn.textContent='Sauvegarder';btn.disabled=false;await syncFromSheet();},2000);
   }catch(e){
-    ceStat('err','Erreur : '+e.message);ceTst('err','Erreur : '+e.message);
+    ceStat('err','Erreur : '+e.message);
+    ceTst('err','Erreur : '+e.message);
     btn.textContent='Sauvegarder';btn.disabled=false;
   }
 }
