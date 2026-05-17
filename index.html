@@ -460,6 +460,7 @@ document.addEventListener('keydown',e=>{
       <label>GitHub Token</label>
       <input class="ce-tok-inp" id="ce-tok" type="password" placeholder="ghp_xxxxxxxxxxxx" autocomplete="off"/>
       <button class="ce-tok-save" onclick="ceSaveTok()">Enregistrer</button>
+      <button class="ce-tok-save" onclick="localStorage.removeItem('vc_gh_token');document.getElementById('ce-tok').value='';ceTokUI('');ceTst('ok','Token effacé — collez-le à nouveau');" style="background:rgba(255,107,157,.2);border-color:rgba(255,107,157,.4);color:#FF6B9D">Effacer</button>
       <div class="ce-tok-st" id="ce-tok-st"></div>
     </div>
     <div class="ce-st" id="ce-st"></div>

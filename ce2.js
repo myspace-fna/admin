@@ -15,9 +15,15 @@ function ceTst(type,msg){
   clearTimeout(ceTst._t);ceTst._t=setTimeout(function(){el.classList.remove('show');},4200);
 }
 
-function ceGetTok(){return localStorage.getItem(CE_TOK_KEY)||'';}
+function ceGetTok(){
+  var raw=localStorage.getItem(CE_TOK_KEY)||'';
+  // Strip any non-ASCII or non-printable characters that would break fetch headers
+  return raw.replace(/[^\x20-\x7E]/g,'').trim();
+}
 function ceSaveTok(){
-  const v=document.getElementById('ce-tok').value.trim();
+  // Strip non-ASCII characters before saving
+  var raw=document.getElementById('ce-tok').value;
+  var v=raw.replace(/[^\x20-\x7E]/g,'').trim();
   if(!v){ceTst('err','Collez votre GitHub Token');return;}
   localStorage.setItem(CE_TOK_KEY,v);ceTokUI(v);ceTst('ok','Token enregistr\u00e9');
 }
@@ -33,8 +39,9 @@ async function openCalEdit(){
   ceStat('inf','Chargement depuis GitHub...');
   try{
     const tok=ceGetTok();
+    // Encode as Latin-1 safe strings for fetch headers
     const h={'Accept':'application/vnd.github+json'};
-    if(tok) h['Authorization']='Bearer '+tok;
+    if(tok) h['Authorization']='Bearer '+tok.replace(/[^\x20-\x7E]/g,'');
     const url='https://api.github.com/repos/'+CE_OWNER+'/'+CE_REPO+'/contents/'+CE_FILE+'?ref='+CE_BRANCH+'&t='+Date.now();
     const res=await fetch(url,{headers:h});
     if(!res.ok) throw new Error('GitHub '+res.status+(res.status===404?' fichier introuvable':res.status===401?' token invalide':''));
@@ -175,7 +182,7 @@ async function cePush(){
     if(ceSha)pl.sha=ceSha;
     var res=await fetch('https://api.github.com/repos/'+CE_OWNER+'/'+CE_REPO+'/contents/'+CE_FILE,{
       method:'PUT',
-      headers:{'Authorization':'Bearer '+tok,'Content-Type':'application/json','Accept':'application/vnd.github+json'},
+      headers:{'Authorization':'Bearer '+tok.replace(/[^\x20-\x7E]/g,''),'Content-Type':'application/json','Accept':'application/vnd.github+json'},
       body:JSON.stringify(pl),
     });
     if(!res.ok){var e=await res.json();throw new Error(e.message||'GitHub API '+res.status);}
