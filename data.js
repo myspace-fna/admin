@@ -154,8 +154,7 @@ async function loadSheetData() {
       console.log('[loadSheetData] GitHub API status:', res.status);
       if (res.ok) {
         const j = await res.json();
-        const raw = atob(j.content.replace(/
-/g, ""));
+        const raw = atob(j.content.replace(/\n/g, ""));
         const text = new TextDecoder("utf-8").decode(new Uint8Array([...raw].map(c => c.charCodeAt(0))));
         const rows = parseCsv(text);
         console.log('[loadSheetData] GitHub API rows:', rows.length, '| SHA:', j.sha);
