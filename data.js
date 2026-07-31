@@ -99,9 +99,11 @@ function findCol(headers, candidates) {
 
 // ── Parser CSV → tableau de réservations ─────────────────────
 function parseCsv(text) {
+  console.log('[parseCsv] length:', text.length, '| start:', JSON.stringify(text.slice(0,100)));
   // Retire le BOM UTF-8 qu'Excel ajoute parfois
   const clean = text.replace(/^\uFEFF/, "").trim();
   const lines = clean.split(/\r?\n/).filter(l => l.trim() !== "");
+  console.log('[parseCsv] lines:', lines.length, '| header:', lines[0]);
   if (lines.length < 2) throw new Error("CSV vide ou sans lignes de données");
 
   const sep     = detectSep(lines[0]);
@@ -134,6 +136,7 @@ function parseCsv(text) {
   }
 
   if (data.length === 0) throw new Error("Aucune réservation valide trouvée dans le CSV");
+  console.log('[parseCsv] parsed', data.length, 'rows | first:', JSON.stringify(data[0]));
   return data;
 }
 

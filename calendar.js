@@ -321,7 +321,11 @@ function render() {
   try {
     if (typeof loadSheetData === 'undefined') throw new Error('data.js non chargé');
     const raw = await loadSheetData();
+    console.log('[calendar] sync: loaded', raw.length, 'rows');
+    console.log('[calendar] first row:', JSON.stringify(raw[0]));
+    console.log('[calendar] last row:', JSON.stringify(raw[raw.length-1]));
     BOOKINGS  = enrichBookings(raw);
+    console.log('[calendar] BOOKINGS enriched:', BOOKINGS.length);
     lastSyncTime = new Date();
     const t  = lastSyncTime.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
     setSyncState('success', raw.length + ' réservations chargées depuis reservations.csv — ' + t);
