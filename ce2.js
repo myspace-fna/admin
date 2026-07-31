@@ -229,25 +229,16 @@ async function cePush(){
     if(!res.ok){var e=await res.json();throw new Error(e.message||'GitHub PUT '+res.status);}
     var result=await res.json();
     ceSha=result.content.sha;
-    ceStat('ok','Sauvegard\u00e9 sur GitHub : '+ceD.length+' r\u00e9servations — calendrier mis \u00e0 jour dans 15s...');
+    ceStat('ok','Sauvegard\u00e9 sur GitHub : '+ceD.length+' r\u00e9servations');
     btn.textContent='Sauvegard\u00e9 !';
     ceTst('ok','Sauvegard\u00e9 sur GitHub');
-    // GitHub Pages prend ~15s pour d\u00e9ployer le nouveau CSV
-    var countdown=15;
-    var iv=setInterval(function(){
-      countdown--;
-      if(countdown>0){
-        ceStat('ok','Sauvegard\u00e9 — actualisation du calendrier dans '+countdown+'s...');
-      } else {
-        clearInterval(iv);
-        btn.textContent='Sauvegarder';btn.disabled=false;
-        ceStat('inf','Synchronisation du calendrier...');
-        syncFromSheet().then(function(){
-          ceStat('ok','Calendrier mis \u00e0 jour !');
-          setTimeout(function(){document.getElementById('ce-st').className='ce-st';},3000);
-        });
-      }
-    },1000);
+    setTimeout(async function(){
+      btn.textContent='Sauvegarder';btn.disabled=false;
+      ceStat('inf','Mise \u00e0 jour du calendrier...');
+      await syncFromSheet();
+      ceStat('ok','Calendrier synchronis\u00e9 !');
+      setTimeout(function(){document.getElementById('ce-st').className='ce-st';},3000);
+    },2000);
   }catch(e){
     ceStat('err','Erreur : '+e.message);
     ceTst('err','Erreur : '+e.message);

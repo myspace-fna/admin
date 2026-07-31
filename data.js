@@ -139,11 +139,29 @@ function parseCsv(text) {
 
 // ── Chargement du CSV ─────────────────────────────────────────
 async function loadSheetData() {
+  // Essaie d'abord l'API GitHub (bypass cache GitHub Pages) si un token est dispo
+  const tok = (localStorage.getItem('vc_gh_token') || '').replace(/[^\x20-\x7E]/g, '').trim();
+  if (tok) {
+    try {
+      const apiUrl = "https://api.github.com/repos/villaCorsu/admin/contents/reservations.csv?ref=main&t=" + Date.now();
+      const res = await fetch(apiUrl, {
+        headers: { "Authorization": "Bearer " + tok, "Accept": "application/vnd.github+json" }
+      });
+      if (res.ok) {
+        const j = await res.json();
+        const raw = atob(j.content.replace(/\n/g, ""));
+        const text = new TextDecoder("utf-8").decode(new Uint8Array([...raw].map(c => c.charCodeAt(0))));
+        const rows = parseCsv(text);
+        if (rows.length > 0) return rows;
+      }
+    } catch(e) { /* fallback sur GitHub Pages */ }
+  }
+  // Fallback : GitHub Pages avec cache busté
   const url = "https://villacorsu.github.io/admin/reservations.csv?t=" + Date.now();
   let res;
   try { res = await fetch(url, { cache: "no-store", mode: "cors" }); }
   catch(e) { throw new Error("Réseau inaccessible : " + e.message); }
-  if (!res.ok) throw new Error("reservations.csv HTTP " + res.status + " — vérifiez villacorsu.github.io/admin/");
+  if (!res.ok) throw new Error("reservations.csv HTTP " + res.status);
   const text = await res.text();
   if (!text || !text.trim()) throw new Error("reservations.csv est vide");
   const rows = parseCsv(text);
