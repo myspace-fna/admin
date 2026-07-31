@@ -4,9 +4,9 @@ const CE_TOK_KEY  = 'vc_gh_token';
 const CE_CFG_KEY  = 'vc_ce_cfg';
 
 function ceCfg(){
-  try{ return Object.assign({owner:'villaCorsu',repo:'admin',file:'reservations.csv',branch:'main'},
+  try{ return Object.assign({owner:'myspace-fna',repo:'admin',file:'reservations.csv',branch:'main'},
     JSON.parse(localStorage.getItem(CE_CFG_KEY)||'{}')); }
-  catch(e){ return {owner:'villaCorsu',repo:'admin',file:'reservations.csv',branch:'main'}; }
+  catch(e){ return {owner:'myspace-fna',repo:'admin',file:'reservations.csv',branch:'main'}; }
 }
 function ceSaveCfg(){
   var cfg={

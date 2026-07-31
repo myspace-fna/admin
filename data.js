@@ -150,7 +150,7 @@ async function loadSheetData() {
 
   if (tok) {
     try {
-      const apiUrl = "https://api.github.com/repos/villaCorsu/admin/contents/reservations.csv?ref=main&_=" + ts;
+      const apiUrl = "https://api.github.com/repos/myspace-fna/admin/contents/reservations.csv?ref=main&_=" + ts;
       const res = await fetch(apiUrl, {
         cache: "no-store",
         headers: { "Authorization": "Bearer " + tok, "Accept": "application/vnd.github+json" }
