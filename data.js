@@ -139,25 +139,29 @@ function parseCsv(text) {
 
 // ── Chargement du CSV ─────────────────────────────────────────
 async function loadSheetData() {
-  // Essaie d'abord l'API GitHub (bypass cache GitHub Pages) si un token est dispo
-  const tok = (localStorage.getItem('vc_gh_token') || '').replace(/[^\x20-\x7E]/g, '').trim();
+  const tok = (localStorage.getItem('vc_gh_token') || '').replace(/[^ -~]/g, '').trim();
+  console.log('[loadSheetData] token present:', !!tok);
   if (tok) {
     try {
       const apiUrl = "https://api.github.com/repos/villaCorsu/admin/contents/reservations.csv?ref=main&t=" + Date.now();
+      console.log('[loadSheetData] trying GitHub API:', apiUrl);
       const res = await fetch(apiUrl, {
         headers: { "Authorization": "Bearer " + tok, "Accept": "application/vnd.github+json" }
       });
+      console.log('[loadSheetData] GitHub API status:', res.status);
       if (res.ok) {
         const j = await res.json();
-        const raw = atob(j.content.replace(/\n/g, ""));
+        const raw = atob(j.content.replace(/
+/g, ""));
         const text = new TextDecoder("utf-8").decode(new Uint8Array([...raw].map(c => c.charCodeAt(0))));
         const rows = parseCsv(text);
+        console.log('[loadSheetData] GitHub API rows:', rows.length, '| SHA:', j.sha);
         if (rows.length > 0) return rows;
       }
-    } catch(e) { /* fallback sur GitHub Pages */ }
+    } catch(e) { console.warn('[loadSheetData] GitHub API error:', e.message); }
   }
-  // Fallback : GitHub Pages avec cache busté
   const url = "https://villacorsu.github.io/admin/reservations.csv?t=" + Date.now();
+  console.log('[loadSheetData] fallback GitHub Pages:', url);
   let res;
   try { res = await fetch(url, { cache: "no-store", mode: "cors" }); }
   catch(e) { throw new Error("Réseau inaccessible : " + e.message); }
