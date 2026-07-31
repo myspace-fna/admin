@@ -58,10 +58,9 @@ function setSyncState(state, msg) {
 // ── Sync from reservations.csv ──────────────────────────────────
 async function syncFromSheet() {
   setSyncState('loading', null);
-  console.log('[Sync] starting...');
   try {
+    if (typeof loadSheetData === 'undefined') throw new Error('data.js non chargé');
     const raw = await loadSheetData();
-    console.log('[Sync] loaded', raw.length, 'rows. First:', raw[0]);
     BOOKINGS  = enrichBookings(raw);
     lastSyncTime = new Date();
     const t  = lastSyncTime.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
@@ -320,6 +319,7 @@ function render() {
   // Puis tente la synchro reservations.csv en arrière-plan
   setSyncState('loading', null);
   try {
+    if (typeof loadSheetData === 'undefined') throw new Error('data.js non chargé');
     const raw = await loadSheetData();
     BOOKINGS  = enrichBookings(raw);
     lastSyncTime = new Date();
